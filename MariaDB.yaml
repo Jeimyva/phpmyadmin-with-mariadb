@@ -1,0 +1,63 @@
+apiVersion: v1
+kind: Service
+
+metadata:
+  name: mariadb
+  labels: 
+    app: web-mariadb
+    microservice: mariadb
+    version: v1
+
+spec:
+  type: ClusterIP  # Utilizado para tener acceso a internet
+  selector:
+    microservice: web-mariadb
+  ports:
+    - protocol: TCP
+      port: 3306
+      targetPort: 3306
+
+---
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: deploy-mariadb
+  labels:
+    app: web-mariadb
+
+spec:
+  selector:
+    matchLabels:
+      proyect: app-web-mariadb
+  replicas: 1
+
+  template:
+    metadata:
+      name: mariadb
+      labels:
+        proyect: app-web-mariadb
+    spec:
+      containers:
+        - name: mariadb
+          image: jeimyvargas/ejercicio2_2:v1_despliegue_cli_mariadb
+          env:
+            - name: mariadb_CONTAINER
+              value: db
+            - name: MARIADB_USER
+              value: user_mariadb
+            - name: MARIADB_PASSWORD
+              value: asd123
+            - name: MARIADB_DATABASE
+              value: mariadb-database
+            - name: MARIADB_ROOT_PASSWORD
+              value: asd123    
+          ports:
+            - containerPort: 3306
+          volumeMounts:
+            - name: persistent-storage-mariadb
+              mountPath: /var/lib/mariadb
+      volumes:
+        - name: persistent-storage-mariadb
+          persistentVolumeClaim:
+            claimName: pvc-mariadb        

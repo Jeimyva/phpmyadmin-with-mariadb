@@ -1,0 +1,55 @@
+apiVersion: v1
+kind: Service
+
+metadata:
+  name: phpmyadmin-service
+  labels:
+    app: web-phpmyadmin
+    version: v1
+
+spec:
+  type: NodePort  #   Utilizado para exponer un puerto de cada nodo
+  selector:
+    microservice: phpmyadmin
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+
+---
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: web-phpmyadmin
+  labels:
+    app: phpmyadmin
+
+spec:
+  selector:
+    matchLabels:
+      proyecto: web-phpmyadmin
+  replicas: 1
+
+  template:
+    metadata:
+      name: pod-phpmyadmin
+      labels:
+        proyecto: web-phpmyadmin
+
+    spec:
+      containers:
+        - name: phpmyadmin
+          image: jeimyvargas/ejercicio2_2:v1_despliegue_cli_phpmyadmin
+          ports:
+            - containerPort: 80
+          env:
+            - name: MARIADB_CONTAINER
+              value: db
+          volumeMounts:
+            - name: persistent-storage-phpmyadmin
+              mountPath: /var/lib/phpmyadmin
+      volumes:
+        - name: persistent-storage-phpmyadmin
+          persistentVolumeClaim:
+            claimName: pvc-phpmyadmin
